@@ -137,7 +137,7 @@ def verify_otp(request: dict, db: Session = Depends(get_db)):
     db.commit()
 
     return {"access_token": token, "role": user.role, "message": "OTP verified successfully",
-            "current_user_id": user.id}
+            "current_user_id": user.id, "username": user.name}
 
 
 # Chat app functionalities
