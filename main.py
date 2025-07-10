@@ -5,6 +5,7 @@ from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconn
 from fastapi.middleware.cors import CORSMiddleware
 import bcrypt
 import jwt
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from database import engine, Base, get_db
@@ -202,6 +203,21 @@ def add_user_to_room(request: dict, db: Session = Depends(get_db)):
     return {"message": "User added to room successfully"}
 
 
+# @app.get("/rooms")
+# def get_user_rooms(user_id: int, db: Session = Depends(get_db)):
+#     # Get rooms where the user is a member
+#     rooms = db.query(Room).join(RoomMember).filter(
+#         RoomMember.user_id == user_id
+#     ).all()
+#
+#     if not rooms:
+#         return {"message": "No rooms found for this user"}
+#
+#     # Format the response
+#     room_list = [{"room_id": room.id, "room_name": room.name} for room in rooms]
+#
+#     return room_list
+
 @app.get("/rooms")
 def get_user_rooms(user_id: int, db: Session = Depends(get_db)):
     # Get rooms where the user is a member
@@ -212,10 +228,23 @@ def get_user_rooms(user_id: int, db: Session = Depends(get_db)):
     if not rooms:
         return {"message": "No rooms found for this user"}
 
-    # Format the response
-    room_list = [{"room_id": room.id, "room_name": room.name} for room in rooms]
+    room_list = []
+
+    for room in rooms:
+        # Fetch last message for the room
+        last_message = db.query(Message).filter(
+            Message.room_id == room.id
+        ).order_by(desc(Message.timestamp)).first()
+
+        room_list.append({
+            "room_id": room.id,
+            "room_name": room.name,
+            "last_message": last_message.content if last_message else "",
+            "last_timestamp": last_message.timestamp.isoformat() if last_message else None
+        })
 
     return room_list
+
 
 
 @app.post("/send-message")
