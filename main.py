@@ -240,6 +240,7 @@ def get_user_rooms(user_id: int, db: Session = Depends(get_db)):
             "room_id": room.id,
             "room_name": room.name,
             "last_message": last_message.content if last_message else "",
+            "last_sender_id": last_message.user_id if last_message else None,
             "last_timestamp": last_message.timestamp.isoformat() if last_message else None
         })
 
