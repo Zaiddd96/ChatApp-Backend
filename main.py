@@ -129,7 +129,12 @@ def verify_otp(request: dict, db: Session = Depends(get_db)):
         return {"error": "Invalid OTP"}
 
     # Generate JWT Token after successful verification
-    token = jwt.encode({"email": user.email, "role": user.role}, AUTH_KEY)
+    expiry = datetime.utcnow() + timedelta(days=7)
+    token = jwt.encode({
+        "email": user.email,
+        "role": user.role,
+        "exp": expiry
+    }, AUTH_KEY)
 
     # Clear OTP after successful verification
     user.otp = None
@@ -202,21 +207,6 @@ def add_user_to_room(request: dict, db: Session = Depends(get_db)):
 
     return {"message": "User added to room successfully"}
 
-
-# @app.get("/rooms")
-# def get_user_rooms(user_id: int, db: Session = Depends(get_db)):
-#     # Get rooms where the user is a member
-#     rooms = db.query(Room).join(RoomMember).filter(
-#         RoomMember.user_id == user_id
-#     ).all()
-#
-#     if not rooms:
-#         return {"message": "No rooms found for this user"}
-#
-#     # Format the response
-#     room_list = [{"room_id": room.id, "room_name": room.name} for room in rooms]
-#
-#     return room_list
 
 @app.get("/rooms")
 def get_user_rooms(user_id: int, db: Session = Depends(get_db)):
